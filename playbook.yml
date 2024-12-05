@@ -124,6 +124,28 @@
         name: containerd
         enabled: yes
 
+    - name: Disable swap for the current session
+      ansible.builtin.command: swapoff -a
+
+    - name: Ensure swap is removed from /etc/fstab
+      ansible.builtin.lineinfile:
+        path: /etc/fstab
+        regexp: '^\s*[^#]*\s+swap\s+'
+        state: absent
+
+    - name: Verify swap is disabled
+      ansible.builtin.shell: swapon --summary
+      register: swap_status
+      changed_when: swap_status.stdout != ""
+      failed_when: swap_status.stdout != ""
+
+    - name: Ensure the kernel parameter is updated to disable swap
+      ansible.builtin.sysctl:
+        name: vm.swappiness
+        value: "0"
+        state: present
+        sysctl_set: true
+
     - name: Initialize Kubernetes Cluster
       ansible.builtin.command:
         cmd: kubeadm init --config /etc/kubernetes/kubeadm-config.yaml --ignore-preflight-errors="Mem"
