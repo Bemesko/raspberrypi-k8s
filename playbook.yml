@@ -84,7 +84,23 @@
         group: "root"
         mode: '0644'
 
+    - name: Enable memory cgroup
+      ansible.builtin.lineinfile:
+        path: /boot/firmware/cmdline.txt
+        line: "cgroup_enable=memory cgroup_memory=1"
+        state: present
+        regexp: "cgroup_enable=memory cgroup_memory=1"
+      register: cmdline_update
+      notify: Reboot if cmdline.txt modified
+
     - name: Initialize Kubernetes Cluster
       ansible.builtin.command:
         cmd: kubeadm init --config /etc/kubernetes/kubeadm-config.yaml
         creates: /etc/kubernetes/admin.conf
+
+  handlers:
+    - name: Reboot if cmdline.txt modified
+      ansible.builtin.reboot:
+        msg: "Rebooting to apply cmdline.txt changes"
+        timeout: 300
+      when: cmdline_update.changed
