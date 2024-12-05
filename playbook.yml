@@ -126,7 +126,7 @@
 
     - name: Initialize Kubernetes Cluster
       ansible.builtin.command:
-        cmd: kubeadm init --config /etc/kubernetes/kubeadm-config.yaml
+        cmd: kubeadm init --config /etc/kubernetes/kubeadm-config.yaml --ignore-preflight-errors="Mem"
         creates: /etc/kubernetes/admin.conf
 
   handlers:
