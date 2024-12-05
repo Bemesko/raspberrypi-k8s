@@ -36,3 +36,18 @@
       ansible.builtin.file:
         path: /tmp/kubernetes-release-key
         state: absent
+
+    - name: Add Kubernetes APT Repository
+      ansible.builtin.apt_repository:
+        repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.31/deb/ /"
+        state: present
+
+    - name: Install Kubernetes Tools
+      ansible.builtin.apt:
+        name:
+          - kubelet
+          - kubeadm
+          - kubectl
+        state: present
+        update_cache: true
+        install_recommends: false
