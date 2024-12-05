@@ -99,14 +99,43 @@
         value: '1'
         state: present
 
+    - name: create containerd directory
+      ansible.builtin.file:
+        path: /etc/containerd
+        state: directory
+
+    - name: create containerd config
+      ansible.builtin.shell: containerd config default > /etc/containerd/config.toml
+      notify:
+        - Restart containerd
+
+    - name: use systemd as cgroup driver
+      ansible.builtin.lineinfile:
+        dest: /etc/containerd/config.toml
+        regexp: '(\s+SystemdCgroup) = false'
+        line: '\1 = true'
+        backrefs: yes
+        state: present
+      notify:
+        - Restart containerd
+
+    - name: enable containerd
+      ansible.builtin.service:
+        name: containerd
+        enabled: yes
+
     - name: Initialize Kubernetes Cluster
       ansible.builtin.command:
         cmd: kubeadm init --config /etc/kubernetes/kubeadm-config.yaml
         creates: /etc/kubernetes/admin.conf
 
   handlers:
-    - name: Reboot if cmdline.txt modified
+    - name: Reboot
       ansible.builtin.reboot:
-        msg: "Rebooting to apply cmdline.txt changes"
+        msg: "Rebooting"
         timeout: 300
-      when: cmdline_update.changed
+
+    - name: Restart containerd
+      ansible.builtin.service:
+        name: containerd
+        state: started
