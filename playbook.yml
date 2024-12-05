@@ -91,7 +91,13 @@
         state: present
         regexp: "cgroup_enable=memory cgroup_memory=1"
       register: cmdline_update
-      notify: Reboot if cmdline.txt modified
+      notify: reboot
+
+    - name: Ensure IP forwarding is enabled
+      ansible.posix.sysctl:
+        name: net.ipv4.ip_forward
+        value: '1'
+        state: present
 
     - name: Initialize Kubernetes Cluster
       ansible.builtin.command:
