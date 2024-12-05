@@ -1,10 +1,9 @@
 - name: Setup Kubernetes Control Plane
   hosts: all
   become: true
-
+  gather_facts: false
   tasks:
-    # Steps below are taken from: https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
-    - name: Update packages
+    - name: Install packages to add apt repositories
       ansible.builtin.apt:
         pkg:
           - apt-transport-https
@@ -20,37 +19,57 @@
         state: directory
         mode: '0755'
 
-    - name: Download Kubernetes GPG key
-      ansible.builtin.get_url:
-        url: https://pkgs.k8s.io/core:/stable:/v1.31/deb/Release.key
-        dest: /tmp/kubernetes-release-key
-        mode: '0644'
-        when: not ansible.builtin.file(path='/etc/apt/keyrings/kubernetes-apt-keyring.gpg').stat.exists
+    - name: Setup for Containerd CRI
+      block:
+        - name: Download Docker GPG key
+          ansible.builtin.get_url:
+            url: https://download.docker.com/linux/ubuntu/gpg
+            dest: /etc/apt/keyrings/docker.asc
+            mode: '0444'
 
-    - name: Convert GPG key to armored format
-      ansible.builtin.command:
-        cmd: gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg /tmp/kubernetes-release-key
-        creates: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+        - name: Add Docker APT Repository
+          ansible.builtin.apt_repository:
+            repo: "deb [arch=arm64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian bookworm stable /"
+            state: present
 
-    - name: Remove temporary key file
-      ansible.builtin.file:
-        path: /tmp/kubernetes-release-key
-        state: absent
+        - name: Install containerd
+          ansible.builtin.apt:
+            pkg: containerd.io
+            state: present
+            update_cache: true
 
-    - name: Add Kubernetes APT Repository
-      ansible.builtin.apt_repository:
-        repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.31/deb/ /"
-        state: present
+    # Steps below are taken from: https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
+    - name: Setup for Kubernetes executables
+      block:
+        - name: Download Kubernetes GPG key
+          ansible.builtin.get_url:
+            url: https://pkgs.k8s.io/core:/stable:/v1.31/deb/Release.key
+            dest: /tmp/kubernetes-release-key
+            mode: '0644'
 
-    - name: Install Kubernetes Tools
-      ansible.builtin.apt:
-        name:
-          - kubelet
-          - kubeadm
-          - kubectl
-        state: present
-        update_cache: true
-        install_recommends: false
+        - name: Convert GPG key to armored format
+          ansible.builtin.command:
+            cmd: gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg /tmp/kubernetes-release-key
+            creates: /etc/apt/keyrings/kubernetes-apt-keyring.GPG
+
+        - name: Remove temporary key file
+          ansible.builtin.file:
+            path: /tmp/kubernetes-release-key
+            state: absent
+
+        - name: Add Kubernetes APT Repository
+          ansible.builtin.apt_repository:
+            repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.31/deb/ /"
+            state: present
+
+        - name: Install Kubernetes Tools
+          ansible.builtin.apt:
+            name:
+              - kubelet
+              - kubeadm
+              - kubectl
+            state: present
+            update_cache: true
 
     - name: Enable kubelet service
       ansible.builtin.service:
@@ -64,3 +83,8 @@
         owner: "root"
         group: "root"
         mode: '0644'
+
+    - name: Initialize Kubernetes Cluster
+      ansible.builtin.command:
+        cmd: kubeadm init --config /etc/kubernetes/kubeadm-config.yaml
+        creates: /etc/kubernetes/admin.conf
