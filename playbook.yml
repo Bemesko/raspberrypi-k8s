@@ -51,3 +51,16 @@
         state: present
         update_cache: true
         install_recommends: false
+
+    - name: Enable kubelet service
+      ansible.builtin.service:
+        name: kubelet
+        state: started
+
+    - name: Create kubeadm configuration file from template
+      ansible.builtin.template:
+        src: "kubeadm-config.yaml.j2"
+        dest: /etc/kubernetes/kubeadm-config.yaml
+        owner: "root"
+        group: "root"
+        mode: '0644'
