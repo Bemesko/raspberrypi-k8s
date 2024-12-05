@@ -20,12 +20,12 @@
         state: directory
         mode: '0755'
 
-    # TODO: only do this if key doesn't exist
     - name: Download Kubernetes GPG key
       ansible.builtin.get_url:
         url: https://pkgs.k8s.io/core:/stable:/v1.31/deb/Release.key
         dest: /tmp/kubernetes-release-key
         mode: '0644'
+        when: not ansible.builtin.file(path='/etc/apt/keyrings/kubernetes-apt-keyring.gpg').stat.exists
 
     - name: Convert GPG key to armored format
       ansible.builtin.command:
