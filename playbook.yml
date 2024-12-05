@@ -1,0 +1,6 @@
+- name: Setup Kubernetes Control Plane
+  hosts: all
+  become: yes
+
+  tasks:
+    - debug: Hi
