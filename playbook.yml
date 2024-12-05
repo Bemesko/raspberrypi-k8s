@@ -1,6 +1,38 @@
 - name: Setup Kubernetes Control Plane
   hosts: all
-  become: yes
+  become: true
 
   tasks:
-    - debug: Hi
+    # Steps below are taken from: https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
+    - name: Update packages
+      ansible.builtin.apt:
+        pkg:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gpg
+        state: present
+        update_cache: true
+
+    - name: Ensure /etc/apt/keyrings directory exists
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+
+    # TODO: only do this if key doesn't exist
+    - name: Download Kubernetes GPG key
+      ansible.builtin.get_url:
+        url: https://pkgs.k8s.io/core:/stable:/v1.31/deb/Release.key
+        dest: /tmp/kubernetes-release-key
+        mode: '0644'
+
+    - name: Convert GPG key to armored format
+      ansible.builtin.command:
+        cmd: gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg /tmp/kubernetes-release-key
+        creates: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+
+    - name: Remove temporary key file
+      ansible.builtin.file:
+        path: /tmp/kubernetes-release-key
+        state: absent
