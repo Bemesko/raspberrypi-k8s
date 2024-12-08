@@ -12,6 +12,11 @@
       register: cmdline_update
       notify: reboot
 
+    - name: Copy K3s configuration
+      ansible.builtin.copy:
+        src: k3s-config.yaml
+        dest: /etc/rancher/k3s/config.yaml
+
   handlers:
     - name: Reboot
       ansible.builtin.reboot:
