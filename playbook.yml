@@ -12,6 +12,11 @@
       register: cmdline_update
       notify: reboot
 
+    - name: Ensure K3s configuration directory exists
+      ansible.builtin.file:
+        name: /etc/rancher/k3s
+        state: directory
+
     - name: Copy K3s configuration
       ansible.builtin.copy:
         src: k3s-config.yaml
