@@ -3,15 +3,6 @@
   become: true
   gather_facts: false
   tasks:
-    # - name: Enable memory cgroup
-    #   ansible.builtin.lineinfile:
-    #     path: /boot/firmware/cmdline.txt
-    #     line: "cgroup_enable=memory cgroup_memory=1"
-    #     state: present
-    #     regexp: "cgroup_enable=memory cgroup_memory=1"
-    #   register: cmdline_update
-    #   notify: reboot
-
     - name: K0sctl binary is installed
       ansible.builtin.get_url:
         url: https://github.com/k0sproject/k0sctl/releases/download/v{{ k0s_version }}/k0sctl-linux-arm64
@@ -29,6 +20,10 @@
         src: templates/k0s-config.yml.j2
         dest: /etc/k0s/config.yml
         mode: "0644"
+
+    - name: K0sctl config is applied
+      ansible.builtin.command:
+        cmd: k0sctl apply --config /etc/k0s/config.yml --debug
 
   handlers:
     - name: Reboot
