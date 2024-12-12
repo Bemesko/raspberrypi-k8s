@@ -1,0 +1,12 @@
+apiVersion: k0sctl.k0sproject.io/v1beta1
+kind: Cluster
+metadata:
+  name: {{ cluster_name }}
+  user: kubernetes-admin
+spec:
+  hosts:
+  - localhost:
+      enabled: true
+    role: single
+  k0s:
+    version: v1.31.2+k0s.0
