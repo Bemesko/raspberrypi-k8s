@@ -1,9 +1,8 @@
 all:
   children:
-    control-plane:
+    control_plane:
       hosts:
         raspberrypi:
           ansible_host: 192.168.1.150
   vars:
-    kubernetes_version_full: "1.31.2"
-    cgroup_driver: "systemd"
+    k0sctl_version: 0.20.0
