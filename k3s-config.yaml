@@ -1,6 +1,0 @@
-token: "12345"
-write-kubeconfig-mode: "0644"
-cluster-init: true
-# tls-san:
-#   - "foo.local"
-# node-label:
