@@ -5,4 +5,5 @@ all:
         raspberrypi:
           ansible_host: 192.168.1.150
   vars:
-    k0sctl_version: 0.20.0
+    k0s_version: 0.20.0
+    cluster_name: raspberry-k8s

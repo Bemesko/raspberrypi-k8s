@@ -14,9 +14,21 @@
 
     - name: K0sctl binary is installed
       ansible.builtin.get_url:
-        url: https://github.com/k0sproject/k0sctl/releases/download/v{{ k0sctl_version }}/k0sctl-linux-arm64
+        url: https://github.com/k0sproject/k0sctl/releases/download/v{{ k0s_version }}/k0sctl-linux-arm64
         dest: /usr/local/bin/k0sctl
         mode: "0755"
+
+    - name: K0sctl config directory exists
+      ansible.builtin.file:
+        state: directory
+        path: /etc/k0s
+        mode: "0644"
+
+    - name: K0sctl config template is rendered
+      ansible.builtin.template:
+        src: templates/k0s-config.yml.j2
+        dest: /etc/k0s/config.yml
+        mode: "0644"
 
   handlers:
     - name: Reboot
